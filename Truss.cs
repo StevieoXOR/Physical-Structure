@@ -90,12 +90,21 @@ class Truss
     public static List<Tuple<double, double>> tupleList315_0x2       = new List<Tuple<double, double>> { tuple315_0,tuple315_0 };
     public static List<Tuple<double, double>> tupleList315_0x4       = new List<Tuple<double, double>> { tuple315_0,tuple315_0,tuple315_0,tuple315_0 };
     public static List<Tuple<double, double>> tupleList0_315       = new List<Tuple<double, double>> { tuple0_315 };
+
+    //horiz == horizontal == flat (2-dimensional)
+    //  .---.
+    //  |\ /|
+    //  | * |     Overall shape (doesn't extend into 3rd spatial dimension)
+    //  |/ \|
+    //  *---*
+    // Tuples are in the following format: (angleIn2D_XYplane,angleIn3D_butOnlyZaxis)
     public static List<Tuple<double, double>> horizAnglesFromTopLeftNode      =  new List<Tuple<double, double>> { tuple270_0/*down*/, tuple0/*right*/ };
     public static List<Tuple<double, double>> horizAnglesFromTopRightNode     =  new List<Tuple<double, double>> { tuple180_0/*left*/, tuple270_0/*down*/ };
     public static List<Tuple<double, double>> horizAnglesFromBottomLeftNode   =  new List<Tuple<double, double>> { tuple90_0/*up*/, tuple0/*right*/ };
     public static List<Tuple<double, double>> horizAnglesFromBottomRightNode  =  new List<Tuple<double, double>> { tuple90_0/*up*/, tuple180_0/*left*/ };
     public static List<Tuple<double, double>> horizDiagAnglesFromCentralNode  =  new List<Tuple<double, double>> { tuple45_0/*upRight*/,tuple135_0/*upLeft*/,tuple225_0/*downLeft*/, tuple315_0/*downRight*/ };
     public static List<Tuple<double, double>> horizSqrAnglesFromCentralNode   =  new List<Tuple<double, double>> { tuple90_0/*up*/,tuple180_0/*left*/,tuple270_0/*down*/, tuple0/*right*/ };
+    
     public int FeNodeSize = 15;
     public static int FeTensileStrength     = 150;
     public static int FeCompressiveStrength = 125;
