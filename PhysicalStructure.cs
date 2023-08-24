@@ -1,5 +1,7 @@
 // 7/16/2022-7/19/2022  Converted from C++, added angle features
 // 7/28/2022  Added NodeDistancesList feature
+// 8/23/2023  Worked out and added the math (including explanatory comments) for converting distance and angle Tuples into a vector.
+//            Did relative speed testing on the if()+trig vs the trig+trig methods.
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -92,17 +94,25 @@ public PhysicalNode  GetNode(string nodeName)
 		Console.WriteLine("'?' is an illegal character for names. Default node returned.");
 		return new PhysicalNode();
 	}
-    for(int nodeID=0; nodeID<NodeList.Count; nodeID++)
+    if(nodeName.Length > LongestName_Len)   //if(nodeToLookFor isLongerThan existingNodeWithLongestName){soughtNodeDoesNotExist}
     {
-        PhysicalNode currNode = NodeList[nodeID];
-        if(String.Equals(nodeName, currNode.name))//If( thereIsANodeWithSameNameAsUserInput ){return nodeWithSameName;}
-        {
-            if(debug){	Console.WriteLine("FOUND A NODE WITH THE SAME USER-SET NAME!");}
-            return currNode;
-        }
+        Console.WriteLine($"Node \"{nodeName}\" not found. Default node returned.");
+        return new PhysicalNode();
     }
-    Console.WriteLine($"Node \"{nodeName}\" not found. Default node returned.");
-	return new PhysicalNode();
+    else
+    {
+        for(int nodeID=0; nodeID<NodeList.Count; nodeID++)
+        {
+            PhysicalNode currNode = NodeList[nodeID];
+            if(String.Equals(nodeName, currNode.name))//If( thereIsANodeWithSameNameAsUserInput ){return nodeWithSameName;}
+            {
+                if(debug){	Console.WriteLine("FOUND A NODE WITH THE SAME USER-SET NAME!");}
+                return currNode;
+            }
+        }
+        Console.WriteLine($"Node \"{nodeName}\" not found. Default node returned.");
+        return new PhysicalNode();
+    }
 }
 
 //Adds node to NodeList
@@ -504,5 +514,12 @@ public void Test()
 	material.AddNodeToStructure(def);
     
     material.Print();
+
+    List<Tuple<double, double>> list_tuple90_180   = new List<Tuple<double, double>>{new Tuple<double, double>(90.0, 180.0)};
+    List<Tuple<double, double>> list_tuple1_2__3_4 = new List<Tuple<double, double>>{new Tuple<double, double>(1.25, 3.125)};
+    PhysicalNode pn1234_135x2 = new PhysicalNode("UniqueName", new List<PhysicalNode>{abc}, list_tuple1_2__3_4, list_tuple90_180);
+    Tuple<double,double,double> vec3D = PhysicalNode.convertDistsAndAnglesTo3DVector(pn1234_135x2.ConexionDistancesFromCurrentNode[0], pn1234_135x2.ConexionAnglesFromCurrentNode[0]);
+    Console.WriteLine("PhysicalNode.convertDistsAndAnglesTo3DVector(distancesList, anglesList):  <{0}, {1}, {2}>",vec3D.Item1, vec3D.Item2, vec3D.Item3);
+    
 }
 }

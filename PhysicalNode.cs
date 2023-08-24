@@ -61,6 +61,7 @@ using System.Collections;		//Enables ArrayList to be used
 using System.Collections.Generic;   //Enables List<> to be used
 using System.Linq;                  //Enables List.Last() to be used
 
+
 class PhysicalNode
 {
     //Private variables only accessible by this class
@@ -81,11 +82,45 @@ class PhysicalNode
 	private bool debug = false;
 	public List<PhysicalNode> ConnectionsFromCurrentNode{get; set;}	 //Each element in the List should be PhysicalNode
 
-	//The 1st of the 2 distance #s describes any point in 2D space when used with the 1st of the 2 2D angles.
-	//E.g. dist=5,angle=270deg => yDistFromCurrPoint=5*sin(270)=-5 && xDistFromCurrPoint=5*cos(270)=5*0=0
+	//I'm using the high-school geometry standard for angles, where 0 degrees is to the right, 90 degrees is up, 180 is left, 270 is down, 360==0,
+	//  and the XY-plane is your flat computer or TV screen. The YZ-plane would be stabbing a cylinder straight (perpendicularly) through your screen.
+	//For the YZ plane, I'm arbitrarily picking that you look from the right side toward the object, making the frontSideOfObject on your left
+	//  and the backSideOfObject on your right. This means cosine should be used for the z component, since it is exactly like x (but in a
+	//  different viewing style).
+	//  Going through a YZ-plane example, negative Z values are closer to the viewer and positive Z values are farther away from the viewer.
+	
+
+	//After running elapsed-time tests, printing the error on the onlyZaxisFor2ndAngleMethod above takes way too long.
+	//  If the warnings were the same length, the if() method is somewhat faster. Despite the long warning, I'm going to
+	//  use the if() method because it's easier to think about logically, as it can be called "stickOutTowardOrAwayFromViewer", where the
+	//  method that applies trig to both distances is slightly harder to visualize and requires more math operations (from a human POV)
+
+	//METHOD I'M USING (public Tuple<double,double,double> convertDistsAndAnglesTo3DVector())
+	//The 1st of the 2 distance #s describes any point in 2D (XY plane) space when used with the 1st of the 2 2D angles.
+	//The 2nd of the 2 distance #s describes any point in 1D (Z axis)   space when used with the 2nd of the 2 2D angles.
+	//For less math for the computer to do (removing cos and sin), I'm restricting the allowed #s of the second angle in the tuple to be either 0 or 180
+	//    Tuples are in the following format: (XYplane_2D_leftRightUpDown, Zaxis_1D_frontBack)
+	//E.g. dist=(5,8.7) and angle=(270,180):
+	//    dist=5,  angle=270deg => yDistFromCurrPoint=5*sin(270)=-5=5unitsDownward && xDistFromCurrPoint=5*cos(270)=5*0=0=0unitsLeftOrRight
+	//    dist=8.7,angle=180deg => zDistFromCurrPoint=if(angle=0){return 8.7;}else if(angle=180){return -8.7;}=-8.7unitsFront
+	//    Combining the 2 vectors (via vector addition), 5unitsDownward+0unitsLeftOrRight+-8.7unitsFront
+	//      = -5y+0x-8.7z = <0,-5,-8.7>
+
+	//METHOD I'M NOT USING
+	//THIS BLOCK IS UNNECESSARILY MATH-INTENSIVE (but does still work)
+	//The 1st of the 2 distance #s describes any point in 2D (XY plane) space when used with the 1st of the 2 2D angles.
+	//The 2nd of the 2 distance #s describes any point in 2D (YZ plane) space when used with the 2nd of the 2 2D angles.
+	//    Tuples are in the following format: (XYplane_2D_leftRightUpDown, YZplane_2D_upDownFrontBack)
+	//E.g. dist=(5,8.7) and angle=(270,180):
+	//    dist=5,  angle=270deg => yDistFromCurrPoint=5*sin(270)=-5=5unitsDownward && xDistFromCurrPoint=5*cos(270)=5*0=0=0unitsLeftOrRight
+	//    dist=8.7,angle=180deg => yDistFromCurrPoint=8.7*sin(180)=0=0unitsDownOrUp && zDistFromCurrPoint=8.7*cos(180)=8.7*(-1)=-8.7=-8.7unitsFront
+	//    Combining the 2 vectors (via vector addition), 5unitsDownward+0unitsLeftOrRight+0unitsDownOrUp+-8.7unitsFront
+	//      = -5y+0x+0y-8.7z = <0,-5,-8.7>
+
     //Each element in the List should be {double XYPlane_2DDist,  double 3D_ZOffsetDist}		3D_ZOffsetDist is perpendicular to XYPlane_2DDist
 	public List< Tuple<double,double> > ConexionDistancesFromCurrentNode{get; set;}
-    //Each element in the List should be {double XYPlane_2DAngle,  double 3D_ZOffsetAngle}		3D_ZOffsetAngle is perpendicular to XYPlane_2DAngle
+    //Each element in the List should be {double XYplane_2DAngle_leftRightUpDown,  double 3D_ZOffsetAngle_upDownFrontBack}
+	//  3D_ZOffsetAngle is perpendicular to XYPlane_2DAngle
 	public List< Tuple<double,double> > ConexionAnglesFromCurrentNode{get; set;}
     public int TensileStrength{get; set;}
     public int CompressiveStrength{get; set;}
@@ -364,5 +399,36 @@ class PhysicalNode
 		Console.Write(         "{0}.TensileStrength (kPa): {1,6}",     /*specificNode.*/Name, /*specificNode.*/TensileStrength     );
 		Console.Write(     "\t\t{0}.CompressiveStrength (kPa): {1,6}", /*specificNode.*/Name, /*specificNode.*/CompressiveStrength );
 		Console.WriteLine( "\t\t{0}.ShearingStrength (kPa): {1,6}\n",  /*specificNode.*/Name, /*specificNode.*/ShearingStrength    );
+	}
+
+	public static Tuple<double,double,double> convertDistsAndAnglesTo3DVector(Tuple<double,double> distances, Tuple<double,double> angles)
+	{
+		//The 1st of the 2 distance #s describes any point in 2D (XY plane) space when used with the 1st of the 2 2D angles.
+		//The 2nd of the 2 distance #s describes any point in 1D (Z-axis)  space when used with the 2nd of the 2 2D angles.
+		//For less math for the computer to do (removing cos and sin), I'm restricting the allowed #s of the second angle in the tuple to be either 0 or 180
+		//    Tuples are in the following format: (XYplane_2D_leftRightUpDown, Zaxis_1D_frontBack)
+		//E.g. dist=(5,8.7) and angle=(270,180):
+		//    dist=5,  angle=270deg => yDistFromCurrPoint=5*sin(270)=-5=5unitsDownward && xDistFromCurrPoint=5*cos(270)=5*0=0=0unitsLeftOrRight
+		//    dist=8.7,angle=180deg => zDistFromCurrPoint=if(angle=0){return 8.7;}else if(angle=180){return -8.7;}=-8.7unitsFront
+		//    Combining the 2 vectors (via vector addition), 5unitsDownward+0unitsLeftOrRight+-8.7unitsFront
+		//      = -5y+0x-8.7z = <0,-5,-8.7>
+		if(angles.Item1 < 0){Console.Write("PhysicalNode: convertDistsAndAnglesTo3DVector(distances,angles):  You typed a negative # of"
+		  +"degrees for angles.Item1 (XY-plane), which can be ambiguous and/or misleading at a glance. [0,double.MaxValue) is allowed.\n");}
+		if(angles.Item2 < 0){Console.Write("PhysicalNode: convertDistsAndAnglesTo3DVector(distances,angles):  You typed a negative # of"
+		  +" degrees for angles.Item2 (Z-axis), which can be ambiguous and/or misleading at a glance. [0,double.MaxValue) is allowed.\n");}
+
+		//  Pi/2 radians == 90 degrees. Math.Cos() and Math.Sin() only take radians as arguments
+		short roundingPrecision = 14;	//Round to 14 (decimal?) places of precision? 14 sig figs?
+		double xComponent = Math.Round(distances.Item1 * Math.Cos(angles.Item1 * Math.PI/2),  roundingPrecision);
+		double yComponent = Math.Round(distances.Item1 * Math.Sin(angles.Item1 * Math.PI/2),  roundingPrecision);
+		double zComponent = -999_999_999;
+			 if(angles.Item2==180){zComponent = Math.Round(-1*distances.Item2, roundingPrecision);}
+		else if(angles.Item2==0){  zComponent = Math.Round(   distances.Item2, roundingPrecision);}
+		else
+		{
+			Console.Write("PhysicalNode: convertDistsAndAnglesTo3DVector(distances,angles):  The only acceptable degree inputs for angles.Item2"
+			  +" are 0 degrees(back-facing) and 180 degrees(front-facing), not {0} degrees.\n", angles.Item2);
+		}
+		return Tuple.Create(xComponent,yComponent,zComponent);
 	}
 }
